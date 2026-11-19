@@ -1,0 +1,10 @@
+*
+!/force-app/
+!/force-app/*
+!/force-app/*/*
+!/force-app/*/*/*
+!/force-app/*/*/*/*
+!/.gitignore
+!/images/
+!/images/*
+!README.md
