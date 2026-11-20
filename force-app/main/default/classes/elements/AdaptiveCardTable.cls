@@ -21,6 +21,10 @@ public without sharing class AdaptiveCardTable implements AdaptiveCardElement {
         this.rows.add(newRow);
     }
 
+    public void addRows(List<AdaptiveCardRow> newRows){
+        this.rows.addAll(newRows);
+    }
+
     public void addColumn(AdaptiveCardColumn newColumn){
         this.columns.add(newColumn);
     }
