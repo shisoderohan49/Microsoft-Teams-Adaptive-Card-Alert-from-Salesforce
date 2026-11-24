@@ -8,6 +8,7 @@ public without sharing class AdaptiveCardTextBox implements AdaptiveCardElement 
     private String size;
     private String weight;
     private Boolean wrap;
+    private String color;
 
     public AdaptiveCardTextBox(String text){
         this.text = text;
@@ -29,6 +30,11 @@ public without sharing class AdaptiveCardTextBox implements AdaptiveCardElement 
 
     public AdaptiveCardTextBox setWrap(Boolean wrap){
         this.wrap = wrap;
+        return this;
+    }
+
+    public AdaptiveCardTextBox setColor(String color){
+        this.color = color;
         return this;
     }
 }
