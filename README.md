@@ -82,12 +82,42 @@ Templates provide reusable sections of Adaptive Card elements.
 They build the individual elements for you, so you can reuse common layouts without repeatedly creating and configuring each small element by hand. 
   
 * Define a template by implementing the `AdaptiveCardTemplate` interface and returning its elements from `getElements()`. 
-* Add those elements to an `AdaptiveCardContent` instance with `addBodyElements()`    
+* Add those elements to an `AdaptiveCardContent` instance with `addBodyElements()` or any other element which has child elements (e.g Container)    
    
 ```apex
-AdaptiveCardTemplate template = new AdaptiveCardTableTemplate(tableContent);
-content.addBodyElements(template.getElements());
+AdaptiveCardContent content = new AdaptiveCardContent('1.5');
+
+AdaptiveCardContainer cardContainer = new AdaptiveCardContainer(true,true).setStyle('good');
+
+AdaptiveCardContainer attentionContainer = new AdaptiveCardContainer(true,true).setStyle('attention');
+AdaptiveCardTextBox headerBox = new AdaptiveCardTextBox('ERROR LOG').setWeight('Bolder').setWrap(true);
+attentionContainer.addItem(headerBox);
+
+List<List<String>> tableContent = new List<List<String>>();
+tableContent.add(new List<String>{'Name', 'EL-0003'});
+tableContent.add(new List<String>{'Error Type', 'Apex Error'});
+tableContent.add(new List<String>{'Operation Type', 'upsert'});
+tableContent.add(new List<String>{'Source', 'SomeApexClass'});
+tableContent.add(new List<String>{'Error Message', 'SObject row was retrieved via SOQL without querying the requested field: SomeObject__c.SomeField__r'});
+tableContent.add(new List<String>{'Stack Trace', 'Class.SomeApexClass.someApexMethod: line 43, column 1'});
+
+AdaptiveCardTableTemplate table = new AdaptiveCardTableTemplate(tableContent);
+table.setRoundedCorners(true);
+table.setCellColor(4,2,'Attention');
+table.setCellColor(5,2,'Attention');
+table.setCellColor(6,2,'Attention');
+
+cardContainer.addItem(attentionContainer);
+cardContainer.addItems(table.getElements());
+
+content.addBodyElement(cardContainer);
+
+AdaptiveCardTeamsController.sendAlert('TEAM_WEBHOOK',content);
 ```
+   
+<p align="center">
+  <img src="images/adaptive_card_table_template.png" alt="Adaptive Card Table Template" height="300">
+</p>
    
 ---
   

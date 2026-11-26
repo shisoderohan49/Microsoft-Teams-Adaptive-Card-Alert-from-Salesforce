@@ -96,7 +96,7 @@ public without sharing class AdaptiveCardTableTemplate implements AdaptiveCardTe
                 List<AdaptiveCardTextBox> rowTextBoxes = new List<AdaptiveCardTextBox>();
                 if (rowContent != null) {
                     for (String cellContent : rowContent) {
-                        AdaptiveCardTextBox textBox = new AdaptiveCardTextBox(cellContent);
+                        AdaptiveCardTextBox textBox = new AdaptiveCardTextBox(cellContent).setWrap(true);
                         AdaptiveCardCell cell = new AdaptiveCardCell();
                         cell.addItem(textBox);
                         row.addCell(cell);
