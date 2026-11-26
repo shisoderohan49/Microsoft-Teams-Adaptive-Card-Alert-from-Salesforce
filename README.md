@@ -1,13 +1,18 @@
-# MICROSOFT TEAMS ADAPTIVE CARD WEBHOOK ALERT FROM SALESFORCE
+# MICROSOFT TEAMS ADAPTIVE CARD ALERT FROM SALESFORCE
 
 * In the chat, create a workflow from the template - `Send webhook alerts to a chat`
 * Copy the webhook URL from the created workflow
 * In the Salesforce Org, deploy the webhook URL as Named Credential
-
+  
+OR   
+register a app in Microsoft Entra ID to use Microsoft Graph API and setup the Named Credentials/External Credentials accordingly.  
+   
 API name of the Named Credential is used as parameter in the Controller Class method to send the alert.
 
 ***
-
+  
+## Elements and Actions
+  
 [Adaptive Card structure](https://learn.microsoft.com/en-us/adaptive-cards/authoring-cards/getting-started)  
 The Basic structure of a card is as follows:  
 * `Adaptive Card`  
@@ -21,7 +26,7 @@ This property describes those actions which typically get rendered in an "action
   
 Elements in this project implement the `AdaptiveCardElement` marker interface while   
 Actions implement the `AdaptiveCardAction` marker interface.  
-   
+
 <p align="center">
   <img src="images/uml_diagram.png" alt="UML Diagram" width="600">
 </p>
@@ -47,23 +52,22 @@ Current Implemented Elements/Actions for Adaptive Card -
 ***
   
 `Adaptive Card Container Example`
-```
+```apex
 AdaptiveCardContent content = new AdaptiveCardContent('1.5');
 
-List<String> containerContent = new List<String>{'Accent Container Text', 'Good Container Text', 'Attention Container Text'};
-List<String> containerStyles = new List<String>{'accent','good','attention'};
+AdaptiveCardContainer accentContainer = new AdaptiveCardContainer(true,true).setStyle('accent');
+AdaptiveCardTextBox accentText = new AdaptiveCardTextBox('Accent Container Text').setWeight('Bolder').setWrap(true);
+accentContainer.addItem(accentText);
 
-List<AdaptiveCardContainer> containerList = new List<AdaptiveCardContainer>();
+AdaptiveCardContainer goodContainer = new AdaptiveCardContainer(true,true).setStyle('good');
+AdaptiveCardTextBox goodText = new AdaptiveCardTextBox('Good Container Text').setWeight('Bolder').setWrap(true);
+goodContainer.addItem(goodText);
 
-for(Integer index = 0; index < containerContent.size(); index++){
-    AdaptiveCardContainer container = new AdaptiveCardContainer(true,true).setStyle(containerStyles.get(index));
-    AdaptiveCardTextBox text = new AdaptiveCardTextBox(containerContent.get(index)).setWeight('Bolder').setWrap(true);
-    container.addItem(text);
+AdaptiveCardContainer attentionContainer = new AdaptiveCardContainer(true,true).setStyle('attention');
+AdaptiveCardTextBox attentionText = new AdaptiveCardTextBox('Attention Container Text').setWeight('Bolder').setWrap(true);
+attentionContainer.addItem(attentionText);
 
-    containerList.add(container);
-}
-
-content.addBodyElements(containerList);
+content.addBodyElements(new List<AdaptiveCardContainer>{accentContainer, goodContainer, attentionContainer});
 
 AdaptiveCardTeamsController.sendAlert('TEAMS_WEBHOOK', content);
 ```
@@ -72,10 +76,23 @@ AdaptiveCardTeamsController.sendAlert('TEAMS_WEBHOOK', content);
   <img src="images/adaptive_card_container.png" alt="Adaptive Card Container" height="300">
 </p>
   
+## Templates
+
+Templates provide reusable sections of Adaptive Card elements.  
+They build the individual elements for you, so you can reuse common layouts without repeatedly creating and configuring each small element by hand. 
+  
+* Define a template by implementing the `AdaptiveCardTemplate` interface and returning its elements from `getElements()`. 
+* Add those elements to an `AdaptiveCardContent` instance with `addBodyElements()`    
+   
+```apex
+AdaptiveCardTemplate template = new AdaptiveCardTableTemplate(tableContent);
+content.addBodyElements(template.getElements());
+```
+   
 ---
   
 `Adaptive Card Table Example`
-```
+```apex
 //Creating Header Text Box Element for the Card 
 AdaptiveCardTextBox header = new AdaptiveCardTextBox('Sample Header').setSize('Large').setWeight('Bolder');
 AdaptiveCardTextBox footer = new AdaptiveCardTextBox('Sample Footer Text');

@@ -17,6 +17,16 @@ public without sharing class AdaptiveCardTable implements AdaptiveCardElement {
         this.rows = new List<AdaptiveCardRow>();
     }
 
+    public AdaptiveCardTable setRoundedCorners(Boolean roundedCorners){
+        this.roundedCorners = roundedCorners;
+        return this;
+    }
+
+    public AdaptiveCardTable setHeaders(Boolean headers){
+        this.firstRowAsHeaders = headers;
+        return this;
+    }
+
     public void addRow(AdaptiveCardRow newRow){
         this.rows.add(newRow);
     }
