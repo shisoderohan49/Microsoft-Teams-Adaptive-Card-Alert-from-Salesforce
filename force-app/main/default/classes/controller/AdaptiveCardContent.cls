@@ -34,6 +34,16 @@ public without sharing class AdaptiveCardContent {
         this.actions.addAll(actions);
     }
 
+    public void addTemplate(AdaptiveCardTemplate template){
+        this.body.addAll(template.getElements());
+    }
+
+    public void addTemplates(List<AdaptiveCardTemplate> templateList){
+        for(AdaptiveCardTemplate template: templateList){
+            this.body.addAll(template.getElements());
+        }
+    }
+
     private class CardWidth {
         private String width;
 
