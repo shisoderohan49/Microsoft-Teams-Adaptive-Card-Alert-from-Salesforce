@@ -1,19 +1,17 @@
-# MICROSOFT TEAMS ADAPTIVE CARD ALERT FROM SALESFORCE
+# Salesforce to Microsoft Teams Adaptive Card Alerts
 
-* In the chat, create a workflow from the template - `Send webhook alerts to a chat`
-* Copy the webhook URL from the created workflow
-* In the Salesforce Org, deploy the webhook URL as Named Credential
+![Salesforce](https://img.shields.io/badge/Salesforce-Apex-blue?style=flat&logo=salesforce)
+![Microsoft Teams](https://img.shields.io/badge/Microsoft%20Teams-Adaptive%20Cards%20v1.5-purple?style=flat&logo=microsoftteams)
   
-OR   
-register a app in Microsoft Entra ID to use Microsoft Graph API and setup the Named Credentials/External Credentials accordingly.  
+Apex framework for constructing and sending rich Microsoft Teams Adaptive Cards directly from Salesforce using Named Credentials.  
    
-API name of the Named Credential is used as parameter in the Controller Class method to send the alert.
+## Overview
 
-***
+Sending alerts from Salesforce to Microsoft Teams often requires constructing complex JSON payloads.  
+This library provides a Apex builder pattern that abstracts payload formatting and handles delivery seamlessly via Salesforce Named Credentials.
+## Adaptive Card Schema
   
-## Elements and Actions
-  
-[Adaptive Card structure](https://learn.microsoft.com/en-us/adaptive-cards/authoring-cards/getting-started)  
+[Microsoft Adaptive Cards Documentation](https://learn.microsoft.com/en-us/adaptive-cards/authoring-cards/getting-started)  
 The Basic structure of a card is as follows:  
 * `Adaptive Card`  
 Root object describes the AdaptiveCard itself  
@@ -23,35 +21,62 @@ Elements can be composed in nearly infinite arrangements to create many types of
 * `actions`  
 Set of actions a user may take on a card.  
 This property describes those actions which typically get rendered in an "action bar" at the bottom.  
-  
-Elements in this project implement the `AdaptiveCardElement` marker interface while   
-Actions implement the `AdaptiveCardAction` marker interface.  
+   
+## Architecture
+
+* Elements implement `AdaptiveCardElement` 
+* Actions implement `AdaptiveCardAction` 
+* Reusable Layouts implement `AdaptiveCardTemplate`
 
 <p align="center">
-  <img src="images/uml_diagram.png" alt="UML Diagram" width="600">
+  <img src="images/uml_diagram.png" alt="Architecture UML Diagram" width="600">
 </p>
    
-***
+## Supported Elements & Actions  
+   
+| Element / Action | Type | Apex Class | Description |
+| :--- | :--- | :--- | :--- |
+| **TextBlock** | Element | `AdaptiveCardTextBox` | Displays formatted text blocks with custom weight, size, and wrapping. |
+| **Container** | Element | `AdaptiveCardContainer` | Groups child elements with styled containers (`accent`, `good`, `attention`). |
+| **Table** | Element | `AdaptiveCardTable` | Displays structured data across rows, columns, and cells. |
+| **OpenUrl** | Action | `AdaptiveCardOpenUrlAction` | Adds an actionable button that opens an external link. |
+     
+## Setup & Configuration
 
-**To Send Alerts from Apex Code**  
-* Construct a `AdaptiveCardContent` instance by adding the required Elements and Actions  
-* Use the above constructed instance as a parameter in `AdaptiveCardTeamsController`'s `sendAlert` method along with the API Name of the named credential  
+#### 1. Deploy Code to Salesforce
+
+```bash
+sf config set target-org <your-org-alias>
+sf project deploy start
+```
+
+#### 2. Configure Microsoft Teams
+Choose one of the following methods to retrieve a webhook or API endpoint:
+* Workflow Webhook  
+In MS Teams, create a workflow using the template `Send webhook alerts to a chat` and copy the generated Workflow Webhook URL.  
+* Microsoft Graph API  
+Register an application in Microsoft Entra ID with appropriate Graph API permissions.  
+  
+#### 3. Configure Named Credentials
+1. In Salesforce Setup, navigate to Named Credentials.
+2. Create a new Named Credential (or External Credential if using Entra ID) using your Webhook/Graph endpoint.
+3. Note the API Name of the Named Credential (e.g., TEAMS_WEBHOOK).
    
-To implement any other elements/actions, create a new class according to the properties required while implementing the necessary interface.  
-Some special elements like Table require other concrete classes like AdaptiveCardRow, AdaptiveCardColumn, AdaptiveCardCell  
+## Usage & Examples
   
-Current Implemented Elements/Actions for Adaptive Card -  
-  
-| Element/Action | Type    | Class(es)                                                                |
-|----------------|---------|--------------------------------------------------------------------------|
-| TextBlock      | Element | AdaptiveCardTextBox                                                      |
-| Table          | Element | AdaptiveCardTable                                                        |
-| Container      | Element | AdaptiveCardContainer                                                    |
-| OpenUrl        | Action  | AdaptiveCardOpenUrlAction                                                |
-   
-***
-  
-`Adaptive Card Container Example`
+### General Usage 
+
+1. Create a new `AdaptiveCardContent` Class Instance
+2. Construct the required Elements, Templates or Actions
+3. Add Body Elements to the Content object by using `addElement(s)` or `addTemplate(s)` and Actions by using `addAction(s)`.
+4. Send the alert by calling `sendAlert` method on `AdaptiveCardTeamsController` with Named Credential API Name and the Content object  
+
+### Examples
+
+#### Container Example
+
+Create styled containers (`accent`, `good`, `attention`) to group related information:
+
 ```apex
 AdaptiveCardContent content = new AdaptiveCardContent('1.5');
 
@@ -71,19 +96,15 @@ content.addBodyElements(new List<AdaptiveCardContainer>{accentContainer, goodCon
 
 AdaptiveCardTeamsController.sendAlert('TEAMS_WEBHOOK', content);
 ```
-  
+
 <p align="center">
   <img src="images/adaptive_card_container.png" alt="Adaptive Card Container" height="300">
 </p>
-  
-## Templates
 
-Templates provide reusable sections of Adaptive Card elements.  
-They build the individual elements for you, so you can reuse common layouts without repeatedly creating and configuring each small element by hand. 
-  
-* Define a template by implementing the `AdaptiveCardTemplate` interface and returning its elements from `getElements()`. 
-* Add those elements to an `AdaptiveCardContent` instance with `addBodyElements()` or any other element which has child elements (e.g Container)    
-   
+#### Table Template Example
+
+Using `AdaptiveCardTableTemplate` for rapid error logging or key-value data formatting:
+
 ```apex
 AdaptiveCardContent content = new AdaptiveCardContent('1.5');
 
@@ -114,55 +135,69 @@ content.addBodyElement(cardContainer);
 
 AdaptiveCardTeamsController.sendAlert('TEAM_WEBHOOK',content);
 ```
-   
+
 <p align="center">
   <img src="images/adaptive_card_table_template.png" alt="Adaptive Card Table Template" height="300">
 </p>
    
----
-  
-`Adaptive Card Table Example`
+#### Table with OpenURL Action Example
+
+Combine custom tables with interactive action buttons:  
 ```apex
-//Creating Header Text Box Element for the Card 
+// Header & Footer
 AdaptiveCardTextBox header = new AdaptiveCardTextBox('Sample Header').setSize('Large').setWeight('Bolder');
 AdaptiveCardTextBox footer = new AdaptiveCardTextBox('Sample Footer Text');
 
-//Creating Table for the Card
+// Table Structure
 AdaptiveCardTable table = new AdaptiveCardTable(true, false);
-List<AdaptiveCardColumn> columns = new List<AdaptiveCardColumn>{new AdaptiveCardColumn(1), new AdaptiveCardColumn(1)};
-table.addColumns(columns);
+table.addColumns(new List<AdaptiveCardColumn>{new AdaptiveCardColumn(1), new AdaptiveCardColumn(1)});
 
-List<String> firstColumnList = new List<String>{'Name', 'Role', 'Github'};
-List<String> secondColumnList = new List<String>{'Rohan Shisode', 'Salesforce Developer', 'shisoderohan49'};
+List<String> keys = new List<String>{'Name', 'Role', 'GitHub'};
+List<String> values = new List<String>{'Rohan Shisode', 'Salesforce Developer', 'shisoderohan49'};
 
-//Adding Row Content to the Table
-for(Integer index = 0; index < firstColumnList.size(); index++){
+for (Integer i = 0; i < keys.size(); i++) {
     AdaptiveCardRow row = new AdaptiveCardRow();
 
-    AdaptiveCardCell firstCell = new AdaptiveCardCell();
-    AdaptiveCardTextBox cellContent = new AdaptiveCardTextBox(firstColumnList.get(index)).setWeight('Bolder').setWrap(true);
-    firstCell.addItem(cellContent);
+    AdaptiveCardCell cell1 = new AdaptiveCardCell();
+    cell1.addItem(new AdaptiveCardTextBox(keys.get(i)).setWeight('Bolder').setWrap(true));
 
-    AdaptiveCardCell secondCell = new AdaptiveCardCell();
-    AdaptiveCardTextBox cellContent2 = new AdaptiveCardTextBox(secondColumnList.get(index)).setWrap(true);
-    secondCell.addItem(cellContent2);
+    AdaptiveCardCell cell2 = new AdaptiveCardCell();
+    cell2.addItem(new AdaptiveCardTextBox(values.get(i)).setWrap(true));
 
-    row.addCells(new List<AdaptiveCardCell>{firstCell, secondCell});
-
+    row.addCells(new List<AdaptiveCardCell>{cell1, cell2});
     table.addRow(row);
 }
 
-//Creating Open Url Action for the Card
-AdaptiveCardOpenUrlAction action = new AdaptiveCardOpenUrlAction().setTitle('Open Github Profile').setUrl('https://github.com/shisoderohan49');
+// Action Button
+AdaptiveCardOpenUrlAction action = new AdaptiveCardOpenUrlAction()
+    .setTitle('Open GitHub Profile')
+    .setUrl('https://github.com/shisoderohan49');
 
-//Creating the final Content instance to be used for the Payload
+// Construct Payload & Send
 AdaptiveCardContent content = new AdaptiveCardContent('1.5');
 content.addBodyElements(new List<AdaptiveCardElement>{header, footer, table});
 content.addActions(new List<AdaptiveCardAction>{action});
 
-AdaptiveCardTeamsController.sendAlert('TEAMS_WEBHOOK',content);
+AdaptiveCardTeamsController.sendAlert('TEAMS_WEBHOOK', content);
 ```
-  
+
 <p align="center">
   <img src="images/adaptive_card_example.png" alt="Adaptive Card Table" height="300">
 </p>
+
+## Extending the Framework
+
+To implement new Adaptive Card elements or actions:
+1. **New Element** - Create a class implementing `AdaptiveCardElement`
+2. **New Action** - Create a class implementing `AdaptiveCardAction`
+3. **New Template** - Create a class implementing `AdaptiveCardTemplate` and return a `List<AdaptiveCardElement>` from `getElement()`  
+   
+### Templates
+
+Templates provide reusable sections of Adaptive Card elements.  
+They build the individual elements for you, so you can reuse common layouts without repeatedly creating and configuring each small element by hand. 
+  
+* Define a template by implementing the `AdaptiveCardTemplate` interface and returning its elements from `getElements()`. 
+* Add those elements to an `AdaptiveCardContent` instance with `addBodyElements()` or any other element which has child elements (e.g Container)
+
+---
