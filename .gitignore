@@ -9,3 +9,4 @@
 !/images/
 !/images/*
 !README.md
+!sfdx-project.json
